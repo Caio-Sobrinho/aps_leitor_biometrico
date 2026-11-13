@@ -1,169 +1,768 @@
-# SIA-Permafrost — Guia de instalação, execução e manutenção
+# SIA-PERMAFROST
+## Sistema de Identificação e Autenticação Biométrica por Reconhecimento Facial
 
-## 1. Visão geral
+**Atividades Práticas Supervisionadas (APS)**  
+**Curso:** Ciência da Computação  
+**Linguagem principal:** Python  
+**desenvolvedores:
 
-Aplicação desktop em Python/Tkinter que usa webcam, MediaPipe para detecção facial, OpenCV/LBPH para reconhecimento, MySQL para cadastro e auditoria e AES-256-GCM para proteção de amostras e do modelo treinado. Os recursos de acesso são `PAINEL_GERAL`, `PAINEL_INTERMEDIARIO` e `PAINEL_CONFIDENCIAL`, com níveis `BASICO`, `INTERMEDIARIO` e `TOTAL`.
+ANA BEATRIZ YUJRA ESPEJO | F358CI4
+CAIO HENRIQUE VICENTE SOBRINHO | R110370
+CAIO PEREIRA SANTOS DA SILVA | G73IEA8
+GABRIELLA SOUZA DE ARAÚJO | G99GJJ7
 
-## 2. Requisitos
+---
 
-- Windows com webcam funcional; Python **3.11**.
-- MySQL Server acessível e uma conta de aplicação com permissões apropriadas.
-- Pacotes do `requirements.txt`. Dependências fixadas: `numpy==1.26.4`, `opencv-contrib-python==4.11.0.86`, `mediapipe==0.10.21`. As demais não estão fixadas: `mysql-connector-python`, `cryptography`, `python-dotenv`, `Pillow`, `pandas`, `pytest`.
-- Conexão com a internet para instalar os pacotes na primeira execução.
+# 1. APRESENTAÇÃO DO PROJETO
 
-## 3. Preparação do projeto
+O SIA-Permafrost é um sistema de identificação e autenticação biométrica desenvolvido como projeto acadêmico no âmbito das Atividades Práticas Supervisionadas (APS) do curso de Ciência da Computação.
 
-**Não copie a pasta `.venv` de outro computador.** Em PowerShell, dentro da pasta que contém `interface`, `servicos` etc.:
+A aplicação tem como finalidade demonstrar, de maneira prática, como técnicas de visão computacional e reconhecimento de padrões podem ser integradas a mecanismos de segurança da informação para controlar o acesso de usuários a recursos computacionais.
+
+O sistema utiliza uma câmera para capturar imagens faciais em tempo real, identifica a presença de rostos, realiza o processamento das imagens e utiliza um modelo biométrico previamente treinado para reconhecer usuários cadastrados.
+
+Após a identificação, a aplicação consulta as informações armazenadas em um banco de dados MySQL e verifica se o usuário possui autorização para acessar o recurso solicitado.
+
+Diferentemente de uma implementação que apenas reconhece uma pessoa pela câmera, o SIA-Permafrost contempla um fluxo mais amplo de autenticação e autorização, incluindo gerenciamento de usuários, diferentes níveis de acesso, armazenamento protegido de dados biométricos e mecanismos de auditoria.
+
+O desenvolvimento foi realizado utilizando a linguagem Python e bibliotecas especializadas, com destaque para OpenCV, MediaPipe, Tkinter e recursos de criptografia.
+
+O resultado é um protótipo funcional voltado à demonstração de conceitos relacionados a reconhecimento facial, organização de software, persistência de dados e controle de acesso.
+
+# 2. OBJETIVOS DO SISTEMA
+
+## 2.1. Objetivo geral
+
+Desenvolver uma aplicação desktop capaz de realizar a identificação biométrica de usuários por reconhecimento facial e controlar o acesso a diferentes recursos do sistema conforme os níveis de permissão previamente cadastrados.
+
+## 2.2. Objetivos específicos
+
+O projeto busca atender aos seguintes objetivos:
+
+- Implementar a captura de imagens faciais utilizando uma webcam.
+- Identificar rostos nos quadros capturados em tempo real.
+- Aplicar técnicas de pré-processamento para padronização das imagens faciais.
+- Utilizar o algoritmo Local Binary Patterns Histograms (LBPH) para reconhecimento facial.
+- Desenvolver uma interface gráfica para interação com os usuários.
+- Integrar o sistema a um banco de dados relacional MySQL.
+- Implementar níveis hierárquicos de autorização.
+- Permitir o cadastramento e a administração de usuários.
+- Proteger os arquivos biométricos utilizando criptografia.
+- Registrar tentativas de acesso e operações administrativas.
+- Permitir a consulta aos históricos de acesso e auditoria.
+- Organizar o código em módulos, favorecendo a manutenção e a evolução do projeto.
+
+# 3. PRINCIPAIS FUNCIONALIDADES
+
+## 3.1. Reconhecimento facial em tempo real
+
+A funcionalidade central do SIA-Permafrost consiste no reconhecimento de usuários a partir de imagens capturadas pela webcam.
+
+O processo é iniciado com a aquisição de quadros de vídeo. Em seguida, a aplicação utiliza o MediaPipe para localizar as regiões correspondentes aos rostos.
+
+As regiões faciais identificadas são encaminhadas ao módulo de pré-processamento, que prepara as imagens para o reconhecedor.
+
+O algoritmo LBPH compara as características da imagem processada com os padrões aprendidos durante o treinamento e retorna um identificador acompanhado de uma medida de distância.
+
+Quando a identificação atende aos critérios estabelecidos pela aplicação, o sistema consulta os dados do usuário correspondente.
+
+É importante destacar que o reconhecimento facial e a autorização são operações diferentes. O reconhecimento busca determinar a identidade da pessoa, enquanto a autorização verifica quais recursos essa pessoa pode utilizar.
+
+**Sugestão de imagem — Figura 1:** captura da tela principal do SIA-Permafrost com a webcam em funcionamento e um usuário reconhecido.
+
+**Sugestão de diagrama — Figura 2:** fluxo de captura, detecção facial, pré-processamento, reconhecimento LBPH e consulta ao banco de dados.
+
+## 3.2. Controle de acesso por níveis de permissão
+
+O sistema utiliza três níveis de acesso:
+
+| Nível | Painel Geral | Painel Intermediário | Painel Confidencial |
+|---|---|---|---|
+| BASICO | Permitido | Negado | Negado |
+| INTERMEDIARIO | Permitido | Permitido | Negado |
+| TOTAL | Permitido | Permitido | Permitido |
+
+Essa organização demonstra a aplicação do conceito de controle de acesso baseado em papéis ou níveis de permissão, conhecido como Role-Based Access Control (RBAC).
+
+Mesmo quando um usuário é reconhecido corretamente, a aplicação deve consultar suas permissões antes de liberar o recurso solicitado.
+
+A autorização também considera a situação cadastral do usuário. Contas desativadas não devem receber acesso, independentemente de terem sido reconhecidas biometricamente.
+
+**Sugestão de imagem — Figura 3:** três capturas de tela apresentando os painéis Geral, Intermediário e Confidencial.
+
+## 3.3. Gerenciamento de usuários
+
+O sistema possui funcionalidades administrativas destinadas à manutenção das informações dos usuários.
+
+Entre as operações implementadas estão o cadastramento de usuários, a alteração dos níveis de permissão e a ativação ou desativação de contas.
+
+As operações administrativas devem ser executadas somente por usuários com autorização adequada, evitando que contas de menor privilégio modifiquem informações sensíveis.
+
+O gerenciamento dos usuários é integrado ao banco de dados, permitindo que as alterações sejam consideradas nas próximas verificações de autorização.
+
+**Sugestão de imagem — Figura 4:** tela de gerenciamento de usuários, mostrando os campos de cadastro, níveis de acesso e operações disponíveis.
+
+## 3.4. Cadastro de amostras biométricas
+
+Para que uma pessoa possa ser reconhecida pelo sistema, é necessário realizar previamente seu cadastro biométrico.
+
+Durante esse procedimento, a aplicação captura um conjunto de imagens faciais e associa as amostras ao identificador do usuário.
+
+O procedimento de cadastro foi desenvolvido para coletar 30 amostras faciais, permitindo que o reconhecedor seja treinado com diferentes registros da mesma pessoa.
+
+Os arquivos biométricos são protegidos por criptografia antes do armazenamento.
+
+Após o cadastramento, o modelo LBPH precisa ser treinado ou atualizado para incorporar as novas amostras.
+
+**Sugestão de imagem — Figura 5:** interface de captura biométrica, apresentando o progresso das amostras coletadas.
+
+## 3.5. Treinamento do modelo biométrico
+
+O treinamento é responsável por transformar as amostras faciais cadastradas em um modelo utilizável durante o reconhecimento.
+
+O algoritmo LBPH analisa padrões locais de intensidade dos pixels e constrói representações baseadas em histogramas.
+
+Durante o reconhecimento, essas representações são comparadas com a imagem facial capturada.
+
+O modelo treinado é armazenado de maneira protegida, sendo necessário carregá-lo e verificar sua integridade antes da utilização.
+
+O treinamento deve ser realizado novamente quando houver alterações nas amostras biométricas que precisem ser incorporadas ao reconhecedor.
+
+## 3.6. Registro de acessos e auditoria
+
+O SIA-Permafrost registra informações sobre as tentativas de acesso aos recursos protegidos.
+
+Os registros incluem dados como o usuário relacionado à tentativa, o recurso solicitado, o resultado da autorização, o motivo da decisão e o momento em que a operação ocorreu.
+
+Os resultados possíveis incluem:
+
+- `AUTORIZADO`: a identidade foi identificada e a permissão foi concedida.
+- `NEGADO`: a solicitação não atendeu aos critérios de autorização.
+- `NAO_RECONHECIDO`: não foi possível associar a identidade facial a um usuário válido.
+
+O sistema também contempla registros de operações administrativas, permitindo acompanhar alterações realizadas na aplicação.
+
+Essas informações são importantes para a rastreabilidade das operações e para a análise posterior de eventos relacionados à segurança.
+
+**Sugestão de imagem — Figura 6:** tela de histórico de acessos e auditoria, mostrando registros e filtros.
+
+# 4. ARQUITETURA E ORGANIZAÇÃO DO PROJETO
+
+O SIA-Permafrost foi organizado de maneira modular, com separação entre interface gráfica, reconhecimento facial, regras de negócio, persistência de dados e segurança.
+
+Essa organização evita concentrar todas as responsabilidades em um único arquivo e facilita a identificação de problemas, a manutenção do código e a implementação de melhorias.
+
+## 4.1. Módulos principais
+
+| Módulo | Responsabilidade |
+|---|---|
+| `interface` | Construção das telas e interação com os usuários |
+| `reconhecimento_facial` | Detecção, pré-processamento, cadastro biométrico, treinamento e reconhecimento |
+| `servicos` | Regras de autorização, permissões, gerenciamento de usuários e registros |
+| `banco_de_dados` | Comunicação com o MySQL |
+| `seguranca` | Criptografia e proteção dos dados |
+| `dados` | Armazenamento dos arquivos biométricos e modelos gerados |
+
+A estrutura permite que a interface gráfica solicite operações aos serviços sem precisar implementar diretamente todas as regras de segurança.
+
+Da mesma forma, os módulos de reconhecimento facial concentram as operações relacionadas ao processamento de imagens.
+
+## 4.2. Principais arquivos do projeto
+
+### `interface/tela_principal.py`
+
+Responsável pela tela principal da aplicação, incluindo os controles de webcam, apresentação das imagens capturadas, identificação do usuário e solicitação de acesso aos painéis.
+
+### `interface/gestao_usuarios.py`
+
+Implementa a interface administrativa para manutenção dos usuários e operações relacionadas ao cadastro biométrico.
+
+### `interface/historico_auditoria.py`
+
+Disponibiliza a consulta aos registros de acesso e auditoria, incluindo mecanismos de filtragem e paginação.
+
+### `interface/layout_paineis.py`
+
+Contém componentes auxiliares utilizados na organização visual dos painéis.
+
+### `reconhecimento_facial/deteccao.py`
+
+Concentra os procedimentos relacionados à detecção de rostos nas imagens capturadas.
+
+### `reconhecimento_facial/pre_processamento.py`
+
+Realiza a preparação das imagens faciais para utilização no reconhecimento.
+
+### `reconhecimento_facial/reconhecimento.py`
+
+Implementa o carregamento do modelo biométrico e as operações necessárias à identificação facial.
+
+### `reconhecimento_facial/cadastro_biometrico.py`
+
+Responsável pelo processo de captura e armazenamento das amostras biométricas associadas aos usuários.
+
+### `reconhecimento_facial/treinamento.py`
+
+Realiza o treinamento do reconhecedor LBPH a partir das amostras disponíveis.
+
+### `servicos/autorizacao.py`
+
+Centraliza o fluxo de autorização, relacionando a identidade reconhecida, as regras de permissão e o registro da tentativa de acesso.
+
+### `servicos/permissoes.py`
+
+Implementa as regras que determinam quais níveis de usuário podem acessar cada recurso.
+
+### `servicos/registros_acesso.py`
+
+Executa o registro das tentativas de acesso no banco de dados.
+
+### `seguranca/criptografia.py`
+
+Implementa os procedimentos de criptografia e descriptografia dos dados protegidos.
+
+### `banco_de_dados/conexao.py`
+
+Centraliza a obtenção das conexões utilizadas pelos demais módulos para comunicação com o MySQL.
+
+**Sugestão de diagrama — Figura 7:** arquitetura modular da aplicação, apresentando as dependências entre os componentes.
+
+# 5. TECNOLOGIAS E DEPENDÊNCIAS
+
+## 5.1. Python
+
+Python é a linguagem utilizada no desenvolvimento da aplicação.
+
+Sua utilização permite integrar recursos de visão computacional, interface gráfica, processamento de dados e comunicação com bancos relacionais.
+
+## 5.2. OpenCV
+
+OpenCV é uma biblioteca de visão computacional utilizada para captura e processamento de imagens.
+
+No SIA-Permafrost, também é utilizada para executar o algoritmo de reconhecimento facial LBPH.
+
+A funcionalidade de reconhecimento facial depende da distribuição do OpenCV que disponibiliza o módulo `cv2.face`, normalmente fornecida pelo pacote `opencv-contrib-python`.
+
+## 5.3. MediaPipe
+
+MediaPipe é utilizado na identificação das regiões faciais presentes nas imagens.
+
+A biblioteca auxilia a localizar os rostos antes que as imagens sejam encaminhadas às etapas de pré-processamento e reconhecimento.
+
+## 5.4. Tkinter
+
+Tkinter é a biblioteca responsável pela interface gráfica desktop.
+
+Por meio dela, a aplicação apresenta a webcam, os controles de autenticação, os painéis de acesso e as ferramentas administrativas.
+
+## 5.5. MySQL
+
+MySQL é o sistema gerenciador de banco de dados utilizado para armazenar informações cadastrais, níveis de permissão e registros operacionais.
+
+## 5.6. Cryptography
+
+A biblioteca `cryptography` disponibiliza os recursos necessários à implementação da criptografia AES-256-GCM.
+
+Esse mecanismo é utilizado para proteger os arquivos biométricos e o modelo de reconhecimento.
+
+## 5.7. Pillow
+
+Pillow auxilia no tratamento e na conversão de imagens, incluindo sua utilização em componentes da interface Tkinter.
+
+## 5.8. Python-dotenv
+
+A biblioteca `python-dotenv` permite carregar configurações armazenadas em um arquivo `.env`, como os parâmetros de conexão ao banco de dados e a chave criptográfica.
+
+# 6. REQUISITOS PARA EXECUÇÃO
+
+Para executar o SIA-Permafrost em outro computador, recomenda-se um ambiente com as seguintes características:
+
+| Componente | Requisito |
+|---|---|
+| Sistema operacional | Windows 10 ou Windows 11 |
+| Python | Versão compatível com o `requirements.txt` e as bibliotecas utilizadas |
+| Banco de dados | MySQL Server 8.x |
+| Câmera | Webcam integrada ou USB |
+| Internet | Necessária para baixar dependências durante a instalação |
+| Armazenamento | Espaço para dependências, banco de dados e arquivos biométricos |
+| Permissões | Acesso para instalar o Python e configurar o MySQL |
+
+O processamento facial pode ser realizado em CPU. Não é necessário possuir uma placa de vídeo dedicada para a demonstração básica.
+
+A versão exata do Python utilizada no desenvolvimento deve ser registrada na entrega final para reduzir problemas de compatibilidade, especialmente com OpenCV e MediaPipe.
+
+# 7. INSTALAÇÃO DO SISTEMA EM OUTRO COMPUTADOR
+
+Esta seção apresenta o procedimento destinado ao professor ou a qualquer avaliador que precise executar o projeto em um ambiente diferente daquele utilizado durante o desenvolvimento.
+
+Os comandos foram organizados considerando o Windows e o terminal PowerShell.
+
+## 7.1. Instalação do Python
+
+A primeira etapa consiste em instalar o Python.
+
+O instalador pode ser obtido no endereço:
+
+https://www.python.org/downloads/
+
+Durante a instalação, recomenda-se habilitar a opção que adiciona o Python ao PATH do Windows.
+
+Após a instalação, abra o PowerShell e execute:
 
 ```powershell
-py -3.11 -m venv .venv
+python --version
+```
+
+Para verificar se o gerenciador de pacotes está disponível:
+
+```powershell
+python -m pip --version
+```
+
+Os comandos deverão apresentar as versões instaladas.
+
+Caso o comando `python` não seja reconhecido, verifique se a instalação foi concluída corretamente e se o executável foi adicionado ao PATH.
+
+## 7.2. Instalação do MySQL
+
+O banco de dados é necessário para o armazenamento das informações utilizadas pelo sistema.
+
+O MySQL Community Server pode ser obtido em:
+
+https://dev.mysql.com/downloads/mysql/
+
+Recomenda-se instalar também o MySQL Workbench:
+
+https://dev.mysql.com/downloads/workbench/
+
+Durante a instalação do servidor, configure uma senha administrativa e mantenha o serviço disponível para conexões locais.
+
+A porta padrão do MySQL é `3306`.
+
+O Workbench será utilizado para criar o banco de dados e executar os scripts SQL necessários à aplicação.
+
+## 7.3. Extração dos arquivos do projeto
+
+Após receber o arquivo ZIP do SIA-Permafrost, o professor deverá extrair seu conteúdo para uma pasta local.
+
+Exemplo:
+
+```text
+C:\Projetos\SIA-Permafrost\
+```
+
+Recomenda-se utilizar um diretório cujo caminho não contenha caracteres especiais, evitando problemas de compatibilidade com ferramentas externas.
+
+Após a extração, abra a pasta no Visual Studio Code ou no terminal PowerShell.
+
+## 7.4. Criação do ambiente virtual
+
+O ambiente virtual permite instalar as bibliotecas necessárias ao projeto sem modificar diretamente as dependências globais do Python.
+
+Na pasta principal do projeto, execute:
+
+```powershell
+python -m venv .venv
+```
+
+Em seguida, ative o ambiente virtual:
+
+```powershell
 .\.venv\Scripts\Activate.ps1
+```
+
+Caso o PowerShell bloqueie a execução do script, utilize, somente na sessão atual:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+```
+
+Depois, execute novamente o comando de ativação.
+
+Quando o ambiente estiver ativo, normalmente será apresentado o prefixo `(.venv)` no terminal.
+
+**Importante:** o ambiente virtual utilizado no computador dos desenvolvedores não deve ser copiado para o computador do professor. Ele deve ser recriado no ambiente de destino.
+
+## 7.5. Instalação das dependências
+
+Com o ambiente virtual ativado, atualize o instalador de pacotes:
+
+```powershell
 python -m pip install --upgrade pip
+```
+
+Depois, instale as bibliotecas declaradas pelo projeto:
+
+```powershell
 python -m pip install -r requirements.txt
 ```
 
-Se a política do PowerShell impedir a ativação, use `cmd` com `.venv\Scripts\activate.bat`, ou execute diretamente `.\.venv\Scripts\python.exe` nos comandos.
+Esse procedimento utiliza as dependências definidas no arquivo `requirements.txt`, evitando a necessidade de instalar manualmente cada biblioteca.
 
-Confirme o OpenCV contrib:
+Após a instalação, execute:
 
 ```powershell
-python -c "import cv2; print(cv2.__version__); print(hasattr(cv2, 'face'))"
+python -m pip check
 ```
 
-O último resultado precisa ser `True`.
+O comando verifica possíveis inconsistências entre os pacotes instalados.
 
-## 4. Banco de dados MySQL
+Também é possível verificar as bibliotecas principais:
 
-Para instalar em outra máquina é necessário exportar o esquema do ambiente original (preferencialmente **somente estrutura, sem dados pessoais**) e importá-lo no novo MySQL. Não basta instalar os pacotes Python.
+```powershell
+python -c "import cv2, mediapipe, PIL, cryptography; print('Bibliotecas importadas com sucesso')"
+```
 
-As tabelas identificadas no projeto são:
+Para verificar se a instalação do OpenCV disponibiliza o reconhecedor LBPH:
 
-- `usuarios`: cadastro, situação e nível;
-- `niveis_acesso`: níveis BASICO, INTERMEDIARIO e TOTAL;
-- `dados_biometricos`: vínculo entre usuário, caminho de arquivo, hash e situação;
-- `registros_acesso`: tentativas de autorização;
-- `registros_auditoria`: operações administrativas.
+```powershell
+python -c "import cv2; print(hasattr(cv2, 'face'))"
+```
 
-É necessário preservar as chaves primárias, estrangeiras, índices, tipos e restrições reais. **Não executar um esquema inventado como se fosse o original.**
+O resultado esperado para a última verificação é `True`.
 
-A conta da aplicação precisa das permissões mínimas compatíveis com os módulos, inclusive `SELECT` sobre `registros_acesso` e `registros_auditoria` para a tela de histórico. Conceda privilégios usando uma conta administradora do MySQL e limite-os ao banco da aplicação. Evite conceder privilégios globais.
+Caso seja apresentado `False`, será necessário verificar a distribuição do OpenCV instalada e sua compatibilidade com as demais dependências.
 
-## 5. Configuração do `.env`
+# 8. CONFIGURAÇÃO DO BANCO DE DADOS
 
-Crie um arquivo `.env` **local** na raiz do projeto com os nomes de variáveis efetivamente utilizados por `banco_de_dados/conexao.py` e `seguranca/criptografia.py`:
+## 8.1. Criação da base
+
+Abra o MySQL Workbench e conecte-se ao servidor local.
+
+Execute:
+
+```sql
+CREATE DATABASE IF NOT EXISTS sia_permafrost
+DEFAULT CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;
+```
+
+Em seguida:
+
+```sql
+USE sia_permafrost;
+```
+
+O conjunto de caracteres `utf8mb4` permite armazenar textos com caracteres acentuados e outros símbolos Unicode.
+
+A configuração de collation `utf8mb4_unicode_ci` define regras de comparação textual utilizadas pelo banco.
+
+## 8.2. Criação das tabelas
+
+A aplicação utiliza tabelas relacionadas ao cadastro de usuários, níveis de acesso, amostras biométricas e registros de auditoria.
+
+Entre as estruturas necessárias estão:
+
+| Tabela | Finalidade |
+|---|---|
+| `usuarios` | Armazenar os dados cadastrais e a situação das contas |
+| `niveis_acesso` | Definir os níveis de permissão |
+| `dados_biometricos` | Associar amostras biométricas aos usuários |
+| `registros_acesso` | Registrar tentativas de acesso |
+| `registros_auditoria` | Registrar operações administrativas |
+
+As tabelas devem ser criadas utilizando o script SQL oficial do projeto.
+
+**Atenção:** a criação do banco de dados não cria automaticamente suas tabelas. Para que o professor consiga instalar o sistema em uma máquina limpa, a entrega precisa incluir um arquivo `schema.sql` com a definição completa das tabelas, índices, chaves estrangeiras e valores iniciais necessários.
+
+Não é recomendado reconstruir manualmente a estrutura com base apenas nos nomes das tabelas, pois diferenças em tipos de dados e restrições podem provocar erros de execução.
+
+## 8.3. Configuração do usuário de aplicação
+
+Recomenda-se que a aplicação utilize um usuário específico do MySQL, em vez da conta administrativa `root`.
+
+Esse usuário deverá possuir apenas os privilégios necessários às operações implementadas.
+
+A criação da conta, a atribuição dos privilégios e a configuração da senha devem ser realizadas conforme o script de instalação definitivo.
+
+A conta utilizada pela aplicação precisa ter permissão para consultar e modificar os dados operacionais necessários, mas não deve receber privilégios administrativos globais sem justificativa.
+
+# 9. CONFIGURAÇÃO DAS VARIÁVEIS DE AMBIENTE
+
+O projeto utiliza variáveis de ambiente para separar determinadas configurações sensíveis do código-fonte.
+
+Na pasta principal da aplicação, deve existir um arquivo `.env` com os parâmetros exigidos pelos módulos de conexão e criptografia.
+
+O arquivo deverá ser criado com base em um modelo `.env.example`, fornecido junto à entrega.
+
+Os nomes das variáveis de conexão deverão corresponder exatamente aos utilizados em `banco_de_dados/conexao.py`.
+
+A chave biométrica utiliza a variável:
 
 ```dotenv
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=usuario_da_aplicacao
-DB_PASSWORD=SENHA_LOCAL_NAO_PUBLICAR
-DB_NAME=nome_do_banco
-BIOMETRIA_CHAVE_BASE64=CHAVE_BASE64_DE_32_BYTES
+BIOMETRIA_CHAVE_BASE64=
 ```
 
-Gere uma **nova chave** para um ambiente novo:
+## 9.1. Geração da chave de criptografia
+
+Para gerar uma chave aleatória de 256 bits, execute:
 
 ```powershell
 python -c "import os,base64; print(base64.b64encode(os.urandom(32)).decode())"
 ```
 
-**Atenção:** uma chave nova não consegue descriptografar amostras ou modelos gerados com a chave antiga. Para uma instalação limpa, cadastre novas amostras e treine um novo modelo. Nunca compartilhe a chave real ou o `.env` em ZIPs de entrega.
+O comando apresentará uma sequência Base64.
 
-## 6. Executar a aplicação
+Copie o resultado e atribua-o à variável `BIOMETRIA_CHAVE_BASE64` no arquivo `.env`.
 
-Na raiz do projeto, com o ambiente ativado:
+Exemplo ilustrativo:
+
+```dotenv
+BIOMETRIA_CHAVE_BASE64=COLE_AQUI_A_CHAVE_GERADA
+```
+
+**Atenção:** cada chave protege os dados criptografados com ela. Se o professor gerar uma nova chave, não conseguirá descriptografar amostras ou modelos produzidos com uma chave diferente.
+
+Por esse motivo, a instalação em outro computador deverá utilizar dados biométricos de demonstração gerados naquele ambiente ou um procedimento seguro e controlado de migração de chaves.
+
+Não se deve publicar a chave verdadeira em repositórios ou relatórios acadêmicos.
+
+# 10. PREPARAÇÃO INICIAL PARA O RECONHECIMENTO
+
+O reconhecimento facial depende da existência de usuários cadastrados e de um modelo biométrico treinado.
+
+Uma instalação nova, contendo apenas o código-fonte e a estrutura do banco de dados, não estará automaticamente preparada para reconhecer pessoas.
+
+Antes da primeira demonstração, será necessário:
+
+1. Criar os níveis de acesso no banco de dados.
+2. Provisionar o primeiro usuário administrador.
+3. Iniciar a aplicação.
+4. Realizar o cadastro biométrico de um usuário autorizado.
+5. Treinar o modelo de reconhecimento facial.
+6. Verificar se o modelo foi gerado corretamente.
+7. Reiniciar ou atualizar o reconhecimento conforme o fluxo implementado.
+
+## 10.1. Primeiro administrador
+
+O sistema restringe operações administrativas aos usuários com nível TOTAL.
+
+Por esse motivo, o primeiro administrador precisa ser criado por um procedimento inicial de provisionamento.
+
+Esse procedimento deve fazer parte do pacote de instalação, preferencialmente por meio de um script específico.
+
+Não é adequado exigir que o professor modifique diretamente o código Python para liberar funções administrativas.
+
+Também não é recomendado deixar uma conta administrativa com senha ou identidade biométrica predefinida e pública.
+
+## 10.2. Cadastro biométrico
+
+Após a preparação da conta administrativa, o usuário poderá realizar a captura das amostras faciais.
+
+Durante o procedimento, recomenda-se utilizar um ambiente bem iluminado, posicionar o rosto em frente à webcam e evitar obstruções significativas.
+
+A captura deverá ser concluída antes do treinamento do modelo.
+
+## 10.3. Treinamento LBPH
+
+O treinamento utiliza as amostras biométricas disponíveis e gera o modelo utilizado durante a identificação.
+
+Após sua conclusão, o arquivo do modelo deverá estar disponível no diretório configurado pela aplicação.
+
+A aplicação também deverá possuir acesso à chave necessária para descriptografá-lo.
+
+# 11. EXECUÇÃO DA APLICAÇÃO
+
+Com o Python, as dependências, o banco de dados e as variáveis de ambiente configurados, a aplicação poderá ser iniciada.
+
+Na raiz do projeto, com o ambiente virtual ativado, execute o módulo de entrada definido pelo projeto.
+
+Se a inicialização estiver centralizada na tela principal, o comando correspondente será:
 
 ```powershell
 python -m interface.tela_principal
 ```
 
-A webcam pode ser iniciada pelo botão da tela principal. O reconhecimento requer um modelo LBPH previamente treinado e dados cadastrais/biométricos consistentes no MySQL. Uma instalação nova, sem modelo, precisa passar primeiro pelo processo de provisionamento de um administrador e cadastro/treinamento biométrico.
+Esse comando pressupõe que o módulo possua um ponto de entrada executável.
 
-**Provisionamento inicial:** o código disponibiliza gestão administrativa para contas `TOTAL`, mas o ZIP não contém um instalador/bootstrap completo do primeiro administrador. O primeiro cadastro deve ser preparado de forma controlada no banco, com os níveis corretos, antes do uso da interface. Documentar os comandos de provisionamento depende da exportação do esquema SQL real.
+Caso o projeto utilize um arquivo principal específico, como `main.py`, o comando deverá ser ajustado para esse arquivo.
 
-## 7. Cadastro e treinamento
+Após a inicialização, a aplicação deverá apresentar sua interface gráfica.
 
-1. Entrar como administrador ativo de nível `TOTAL`.
-2. Abrir o painel confidencial e a gestão de usuários.
-3. Cadastrar um usuário com nome, e-mail e nível.
-4. Selecionar o usuário e iniciar a captura biométrica (padrão de 30 amostras).
-5. Seguir as instruções da janela OpenCV; `ESPAÇO` captura e `ESC` cancela.
-6. Aguardar o treinamento LBPH terminar antes de tentar reiniciar a webcam principal.
-7. Reiniciar a câmera para carregar o modelo atualizado.
+A webcam poderá então ser iniciada pelos controles disponíveis na tela.
 
-O recadastro adiciona novas amostras ativas; não substitui automaticamente as anteriores.
+O usuário deverá posicionar o rosto diante da câmera e aguardar o processamento da identificação.
 
-## 8. Arquitetura de pastas
+Quando o sistema reconhecer uma identidade válida, será possível solicitar acesso aos recursos disponíveis.
 
-```text
-APS_Reconhecimento_Facial/
-├── banco_de_dados/
-│   └── conexao.py
-├── interface/
-│   ├── tela_principal.py
-│   ├── painel_geral.py
-│   ├── painel_intermediario.py
-│   ├── painel_confidencial.py
-│   ├── gestao_usuarios.py
-│   ├── historico_auditoria.py
-│   └── layout_paineis.py
-├── reconhecimento_facial/
-│   ├── captura.py
-│   ├── deteccao.py
-│   ├── pre_processamento.py
-│   ├── extracao_caracteristicas.py
-│   ├── reconhecimento.py
-│   ├── cadastro_biometrico.py
-│   └── treinamento.py
-├── seguranca/
-│   └── criptografia.py
-├── servicos/
-│   ├── autorizacao.py
-│   ├── permissoes.py
-│   ├── registros_acesso.py
-│   ├── usuarios.py
-│   └── consulta_auditoria.py
-├── testes/
-│   └── testar_*.py
-├── dados/                  # dados biométricos locais, não distribuir
-├── requirements.txt
-└── .env                    # segredo local, não distribuir
-```
+A autorização dependerá do nível de permissão associado à conta.
 
-## 9. Testes
+# 12. PROCEDIMENTO DE DEMONSTRAÇÃO PARA O PROFESSOR
 
-Verificação de sintaxe (não substitui testes funcionais):
+Para demonstrar o funcionamento do SIA-Permafrost durante a apresentação acadêmica, recomenda-se utilizar um roteiro organizado.
+
+## 12.1. Demonstração da inicialização
+
+Apresentar a estrutura do projeto no Visual Studio Code, destacando os módulos de interface, reconhecimento facial, serviços, segurança e banco de dados.
+
+Em seguida, executar a aplicação e demonstrar a abertura da tela principal.
+
+## 12.2. Demonstração do reconhecimento
+
+Iniciar a webcam e posicionar um usuário previamente cadastrado diante da câmera.
+
+Aguardar o reconhecimento e apresentar as informações disponibilizadas pela aplicação.
+
+Explicar que o processo envolve detecção facial, pré-processamento e comparação com o modelo LBPH.
+
+## 12.3. Demonstração dos níveis de acesso
+
+Utilizar contas de teste com diferentes níveis de permissão.
+
+Demonstrar que um usuário BASICO não possui acesso aos painéis reservados aos níveis superiores.
+
+Repetir o procedimento com usuários INTERMEDIARIO e TOTAL, evidenciando a diferença entre identificação e autorização.
+
+## 12.4. Demonstração do gerenciamento de usuários
+
+Acessar a interface administrativa utilizando uma conta TOTAL.
+
+Apresentar o cadastro de usuários, a alteração de permissões e a atualização da situação cadastral.
+
+## 12.5. Demonstração do cadastro biométrico
+
+Apresentar a funcionalidade de captura das amostras faciais.
+
+Explicar como os dados são associados ao usuário e protegidos antes do armazenamento.
+
+## 12.6. Demonstração da auditoria
+
+Acessar a interface de histórico.
+
+Apresentar os registros de acesso e demonstrar que as solicitações autorizadas e negadas podem ser consultadas.
+
+Mostrar também os registros das operações administrativas.
+
+**Sugestão de evidência — Figura 8:** captura de uma tentativa de acesso negada, acompanhada do respectivo registro no MySQL.
+
+# 13. TESTES E VERIFICAÇÕES
+
+O projeto contempla cenários de teste relacionados às principais funcionalidades.
+
+Para a avaliação acadêmica, recomenda-se documentar os resultados obtidos em cada cenário.
+
+| Cenário | Resultado esperado |
+|---|---|
+| Inicialização da webcam | Captura de imagens disponível |
+| Reconhecimento de usuário cadastrado | Identificação correspondente |
+| Pessoa desconhecida | Acesso não autorizado |
+| Usuário inativo | Acesso bloqueado |
+| Permissão insuficiente | Solicitação negada |
+| Usuário TOTAL | Acesso aos recursos previstos |
+| Cadastro biométrico | Amostras associadas ao usuário |
+| Treinamento | Modelo biométrico gerado |
+| Arquivo criptografado alterado | Falha de integridade detectada |
+| Consulta de auditoria | Registros apresentados |
+| Indisponibilidade do banco | Autorização bloqueada |
+
+Os resultados devem ser registrados conforme os testes efetivamente executados.
+
+A existência de uma funcionalidade implementada não constitui, isoladamente, evidência de que todos os cenários foram aprovados.
+
+# 14. PRINCIPAIS PROBLEMAS E SOLUÇÕES
+
+## 14.1. Python não reconhecido
+
+**Sintoma:** o terminal informa que o comando `python` não foi encontrado.
+
+**Possível causa:** Python não instalado ou não configurado no PATH.
+
+**Solução:** verificar a instalação e reiniciar o terminal. Em instalações Windows que utilizam o Python Launcher, testar também o comando `py --version`.
+
+## 14.2. Erro `ModuleNotFoundError`
+
+**Sintoma:** uma biblioteca utilizada pelo projeto não pode ser importada.
+
+**Possível causa:** ambiente virtual não ativado ou dependência ausente.
+
+**Solução:**
 
 ```powershell
-python -m compileall -q banco_de_dados interface reconhecimento_facial seguranca servicos testes
+python -m pip install -r requirements.txt
 ```
 
-Testes manuais recomendados: iniciar/parar webcam, rosto cadastrado/desconhecido, múltiplos rostos, autorização dos três níveis, conta inativa, cadastro e recadastro, cancelamento da captura, auditoria e filtros, falha de banco e integridade criptográfica. **Não registrar esses cenários como aprovados sem execução e evidências.**
+## 14.3. Erro relacionado a `cv2.face`
 
-O diretório `testes` contém scripts `testar_*.py`, mas sua presença não comprova que todos passaram na máquina de destino. Alguns podem requerer banco, câmera ou dados previamente configurados.
+**Sintoma:** o módulo de reconhecimento facial não está disponível.
 
-## 10. Diagnóstico de erros frequentes
+**Possível causa:** instalação de uma distribuição do OpenCV sem os módulos adicionais.
 
-| Sintoma | Verificação |
-|---|---|
-| `No module named ...` | Ambiente virtual ativo e `pip install -r requirements.txt` |
-| `module 'cv2' has no attribute 'face'` | Instalar `opencv-contrib-python` da versão indicada, evitando conflito com `opencv-python` |
-| Erro de conexão MySQL | Servidor ativo, `.env`, porta, usuário, banco e privilégios |
-| `SELECT command denied` | Revisar `SHOW GRANTS` da conta da aplicação e conceder somente as permissões necessárias |
-| Webcam indisponível | Permissões do Windows, outro programa usando a câmera, dispositivo `VideoCapture(0)` |
-| Modelo LBPH ausente | Registrar amostras e treinar modelo antes de iniciar reconhecimento |
-| Erro de descriptografia | Conferir se a chave corresponde à usada na geração dos arquivos; não substituir a chave de um ambiente existente |
-| Falha de integridade | Arquivo alterado/incompleto ou hash divergente; não ignorar a verificação |
+**Solução:** conferir o pacote e a versão declarados no `requirements.txt`, evitando instalações simultâneas e conflitantes de diferentes distribuições do OpenCV.
 
-## 11. Segurança e distribuição
+## 14.4. Falha de conexão com MySQL
 
-O ZIP recebido contém `.env`, `.venv`, `dados/modelos` e `dados/rostos`. **Não redistribua esse pacote sem limpeza.** Remova os segredos, os arquivos biométricos e o ambiente virtual; gere o `.env` individualmente em cada instalação. Se o ZIP foi compartilhado fora de um ambiente restrito, troque a senha do banco e avalie a rotação da chave de criptografia, planejando a migração dos dados existentes antes de alterá-la.
+**Sintoma:** a aplicação não consegue consultar ou modificar informações no banco de dados.
 
-A aplicação é um protótipo acadêmico; o reconhecimento LBPH não constitui, por si só, prova de vivacidade nem certificação para uso em controle de acesso físico de alta criticidade.
+**Possíveis causas:** serviço MySQL desligado, credenciais incorretas, banco inexistente ou privilégios insuficientes.
 
-## 12. Pendências para instalação inteiramente reproduzível
+**Solução:** verificar o serviço, os parâmetros de conexão, a existência das tabelas e os privilégios atribuídos ao usuário da aplicação.
 
-1. Exportar e revisar um script SQL de **estrutura** das cinco tabelas, incluindo índices e chaves estrangeiras.
-2. Formalizar o procedimento de criação do primeiro administrador `TOTAL` em ambiente vazio.
-3. Confirmar as versões exatas das dependências ainda não fixadas em `requirements.txt`.
-4. Executar e registrar testes de instalação limpa em outra máquina.
+## 14.5. Webcam indisponível
+
+**Sintoma:** a aplicação não consegue iniciar a captura de vídeo.
+
+**Possíveis causas:** câmera desconectada, permissão negada pelo Windows ou utilização simultânea por outro programa.
+
+**Solução:** verificar as permissões de câmera do sistema operacional e encerrar aplicativos que possam estar utilizando o dispositivo.
+
+## 14.6. Modelo biométrico não encontrado
+
+**Sintoma:** a aplicação não consegue carregar o reconhecedor treinado.
+
+**Possível causa:** treinamento ainda não realizado ou arquivo do modelo ausente.
+
+**Solução:** verificar se existem amostras biométricas válidas e executar o treinamento.
+
+## 14.7. Falha de descriptografia
+
+**Sintoma:** a aplicação não consegue ler arquivos biométricos previamente armazenados.
+
+**Possíveis causas:** chave incorreta, arquivo alterado ou incompatibilidade entre os dados e a configuração atual.
+
+**Solução:** verificar a configuração da chave e a integridade dos arquivos. Não substituir a chave de uma instalação que já possua dados criptografados sem um procedimento adequado de migração.
+
+# 15. SEGURANÇA E PROTEÇÃO DOS DADOS
+
+O SIA-Permafrost utiliza mecanismos de segurança em diferentes etapas do processamento.
+
+A criptografia AES-256-GCM protege os dados biométricos armazenados e permite detectar alterações não autorizadas nos arquivos.
+
+O controle de permissões impede que a identificação facial seja interpretada automaticamente como autorização.
+
+A consulta ao banco de dados permite verificar a situação atual da conta e o nível de acesso associado ao usuário.
+
+O registro de eventos contribui para a rastreabilidade das operações.
+
+Entretanto, é necessário reconhecer as limitações do protótipo.
+
+O sistema não deve ser considerado uma solução biométrica certificada para ambientes críticos. A utilização de reconhecimento facial envolve riscos relacionados a falsos positivos, falsos negativos, condições de iluminação e tentativas de apresentação de imagens artificiais.
+
+Além disso, dados biométricos são dados pessoais sensíveis segundo a Lei Geral de Proteção de Dados Pessoais (LGPD), exigindo cuidados específicos quanto à coleta, finalidade, armazenamento, acesso, retenção e exclusão.
+
+Para a apresentação acadêmica, recomenda-se utilizar somente dados de participantes que tenham autorizado a utilização de suas imagens.
+
+# 16. LIMITAÇÕES E MELHORIAS FUTURAS
+
+Embora o SIA-Permafrost reúna diferentes funcionalidades, existem possibilidades de aprimoramento.
+
+Entre elas estão a implementação de mecanismos de detecção de vivacidade, a utilização de modelos mais modernos de reconhecimento facial, o desenvolvimento de testes automatizados adicionais, a ampliação da cobertura de tratamento de falhas e o aprimoramento dos procedimentos de instalação.
+
+Também poderão ser estudadas estratégias de empacotamento da aplicação em um executável para Windows, reduzindo a necessidade de configurar manualmente um ambiente Python.
+
+Outra possibilidade consiste na criação de um instalador que configure automaticamente as dependências e execute verificações de pré-requisitos.
+
+# 17. CONSIDERAÇÕES FINAIS
+
+O desenvolvimento do SIA-Permafrost proporcionou a aplicação prática de conhecimentos relacionados à programação, visão computacional, reconhecimento de padrões, bancos de dados e segurança da informação.
+
+A implementação demonstrou que o reconhecimento facial pode ser integrado a um mecanismo de autorização estruturado, no qual a identificação biométrica constitui apenas uma das etapas necessárias à liberação de recursos.
+
+A utilização de módulos independentes permitiu organizar as responsabilidades do software e facilitar sua evolução ao longo do desenvolvimento.
+
+A inclusão de funcionalidades administrativas, criptografia e auditoria ampliou o escopo do projeto para além de um reconhecedor facial isolado.
+
+Como resultado, o SIA-Permafrost representa um protótipo acadêmico que integra diferentes áreas da Ciência da Computação em uma aplicação com interface gráfica e controle de acesso.
+
+---
+
+**Observação para a entrega:** este README deve acompanhar o código-fonte, o arquivo `requirements.txt`, o modelo `.env.example`, o script `schema.sql` e o procedimento de criação do primeiro administrador. Sem esses componentes, a instalação em um computador novo não estará integralmente automatizada ou reproduzível.
