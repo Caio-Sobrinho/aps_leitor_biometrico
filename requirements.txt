@@ -1,0 +1,18 @@
+# Processamento de imagens e reconhecimento facial
+numpy==1.26.4
+opencv-contrib-python==4.11.0.86
+mediapipe==0.10.21
+
+# Banco de dados
+mysql-connector-python
+
+# Segurança e criptografia
+cryptography
+python-dotenv
+
+# Manipulação de imagens e relatórios
+Pillow
+pandas
+
+# Testes
+pytest

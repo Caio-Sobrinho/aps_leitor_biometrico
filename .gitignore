@@ -1,0 +1,16 @@
+# Ambiente virtual
+.venv/
+
+# Arquivos Python
+__pycache__/
+*.py[cod]
+
+# Dados biométricos
+dados/rostos/*
+dados/modelos/*
+
+# Registros
+registros/*
+
+# Testes
+.pytest_cache/
